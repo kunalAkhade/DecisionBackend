@@ -3,11 +3,14 @@ using DecisionBackend.DTO;
 using DecisionBackend.Models.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Data.Common;
+using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DecisionBackend.Controllers
@@ -30,7 +33,11 @@ namespace DecisionBackend.Controllers
             {
                 return BadRequest(new { message = "Task is null" });
             }
-            if ((taskDTO.Title == null || taskDTO.Title.Length == 0) || (taskDTO.Description == null || taskDTO.Description.Length == 0))
+            if (taskDTO.Title == null || taskDTO.Description == null )
+            {
+                return BadRequest(new { message = "Task is Invalid" });
+            }
+            if(taskDTO.Title.Length == 0 || taskDTO.Description.Length == 0)
             {
                 return BadRequest(new { message = "Task is Invalid" });
             }
@@ -83,23 +90,24 @@ namespace DecisionBackend.Controllers
             try
             {
                 var username = User?.Identity?.Name;
-                List<Models.Domain.Task> data = await dbContext.Tasks.Where(t => t.User != null && t.User.Username == username).ToListAsync();
+                List<Models.Domain.Task> data = await dbContext.Tasks.Where(t => t.User != null && t.User.Username == username).Include(t => t.Category).ToListAsync();
                 List<TaskResDTO> list = new List<TaskResDTO>();
                 foreach (var i in data)
                 {
+                    
                     TaskResDTO task = new TaskResDTO
                     {   
                         Id = i.Id,
                         Title = i.Title,
                         Description = i.Description,
-                        Category = i.Category?.Id,
+                        Category = i.Category,
                         Status = i.Status,
                         PriorityType = i.PriorityType
                     };
                     list.Add(task);
                 }
 
-                return Ok(new { data = list, message = "Successfully fetched all tasks" });
+                return Ok(new { data = data, message = "Successfully fetched all tasks" });
 
 
             }
@@ -108,6 +116,45 @@ namespace DecisionBackend.Controllers
 
                 return BadRequest(ex.ToString());
             }
+        }
+
+        [Authorize]
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetTaskById(string id)
+        {
+            if(string.IsNullOrEmpty(id))
+            {
+                return BadRequest(new { message = "id is null" });
+            }
+            try
+            {
+                var task = await dbContext.Tasks
+                           .Where(t => t.Id == Guid.Parse(id))
+                           .Include(t => t.Category)
+                           .FirstOrDefaultAsync();
+                if (task == null)
+                {
+                    return Ok(new { message = "No task with the id" });
+                }
+                Console.WriteLine(task.Title);
+                TaskResDTO result = new TaskResDTO
+                {
+                    Id = task.Id,
+                    Title = task.Title,
+                    Description = task.Description,
+                    Category = task.Category,
+                    Status = task.Status,
+                    PriorityType = task.PriorityType
+                };
+                return Ok(new { message = "Successfully fetched", data = result });
+
+            }
+            catch(Exception e)
+            {
+                return BadRequest(new { message = e.ToString() });
+            }
+           
+
         }
 
         [Authorize]
@@ -135,7 +182,7 @@ namespace DecisionBackend.Controllers
                         Id = t.Id,
                         Title = t.Title,
                         Description = t.Description,
-                        Category = t.Category.Id,
+                        Category = t.Category,
                         Status = t.Status,
                         PriorityType = t.PriorityType
                     })

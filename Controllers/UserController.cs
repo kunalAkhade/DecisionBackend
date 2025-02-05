@@ -4,6 +4,7 @@ using DecisionBackend.DTO;
 using DecisionBackend.Models.Domain;
 using DecisionBackend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -91,7 +92,7 @@ namespace DecisionBackend.Controllers
                 var usr = await dbContext.Users.FindAsync(userDTO.Username);
                 if (usr != null)
                 {
-                    return BadRequest(new {message="User already exists"});
+                    return Ok(new {message="User already exists"});
                 }
                 var user = new User
                 {
@@ -101,7 +102,7 @@ namespace DecisionBackend.Controllers
                 await dbContext.Users.AddAsync(user);
                 await dbContext.SaveChangesAsync();
 
-                return Ok(new { message = "User is created" });
+                return Ok(new { data=user, message = "User is created" });
 
             }
             catch (Exception ex)

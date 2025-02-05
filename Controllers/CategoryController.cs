@@ -35,7 +35,7 @@ namespace DecisionBackend.Controllers
 
                 var username=User?.Identity?.Name;
                 var existingCategory = await dbContext.Categories.Where(c => c.CategoryName == categoryDTO.CategoryName && c.User.Username == username).ToListAsync();
-                if (existingCategory != null)
+                if (existingCategory.Count !=0)
                 {
                     return BadRequest(new { message = "Catagory already exists" });
                 }
@@ -78,7 +78,7 @@ namespace DecisionBackend.Controllers
                         categoryName = data.CategoryName,
                         Id = data.Id
                     };
-                    result.Add(c);
+                    result.Add(c);  
 
                 }
                 return Ok(new { data = result, message = "Successfully fetched all categories" });

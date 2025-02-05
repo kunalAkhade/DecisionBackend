@@ -3,6 +3,7 @@ using DecisionBackend.Services.Implementation;
 using DecisionBackend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -10,7 +11,19 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")  // Restrict to a specific domain
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+        //policy.AllowAnyOrigin()
+        //                         .AllowAnyHeader()
+        //                         .AllowAnyMethod();
+
+    });
+});
 
 builder.Services.AddControllers();
 //    .AddJsonOptions(options =>
@@ -98,7 +111,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-
+app.UseCors("AllowSpecificOrigin"); // Apply the CORS policy
 
 app.UseAuthentication();  // Enable authentication
 

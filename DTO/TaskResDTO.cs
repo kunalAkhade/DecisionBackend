@@ -1,4 +1,6 @@
-﻿namespace DecisionBackend.DTO
+﻿using DecisionBackend.Models.Domain;
+
+namespace DecisionBackend.DTO
 {
     public class TaskResDTO
     {
@@ -10,7 +12,7 @@
         public Models.Domain.StatusType Status { get; set; }
 
 
-        public Guid? Category { get; set; }
+        public Category? Category { get; set; }
 
         public Models.Domain.Priority PriorityType { get; set; }
     }
