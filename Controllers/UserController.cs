@@ -72,10 +72,10 @@ namespace DecisionBackend.Controllers
 
             if (username == null)
             {
-                return Unauthorized("Token does not contain a valid username.");
+                return Unauthorized(new { message = "Token does not contain a valid username.", isValid = false });
             }
 
-            return Ok(new { Username = username, Message = "This is protected data." });
+            return Ok(new { isValid=true , Username = username, Message = "This is protected data." });
         }
 
 
