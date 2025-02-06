@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DecisionBackend.Data;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DecisionBackend.Controllers
 {
@@ -88,6 +89,57 @@ namespace DecisionBackend.Controllers
                 return BadRequest(new { message = e.ToString() });
             }
 
+        }
+
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> deleteCategory(string id)
+        {
+            if (id.IsNullOrEmpty())
+            {
+                return BadRequest(new { message = "Invalid id" });
+            }
+
+
+
+            using var transaction = dbContext.Database.BeginTransaction();
+
+            try
+            {
+                // Retrieve the category with its related tasks
+                var category = dbContext.Categories
+                    .Include(c => c.Tasks)  // Include related tasks
+                    .FirstOrDefault(c => c.Id == Guid.Parse(id)); // Assuming CategoryId = 1
+
+                if (category != null)
+                {
+                    // Delete related tasks first
+                    dbContext.Tasks.RemoveRange(category.Tasks);  // Remove all tasks related to this category
+
+                    // Delete the category itself
+                    dbContext.Categories.Remove(category);  // Remove the category
+
+                    // Save changes to the database
+                    dbContext.SaveChanges();
+                    transaction.Commit();
+                    return Ok(new { message = "Deleted" });
+                }
+
+                return BadRequest(new { message = "category cannot be found" });
+               
+
+            }
+            catch (Exception e)
+            {
+                // Rollback the transaction if anything goes wrong
+                transaction.Rollback();
+                return BadRequest(new { message = e.ToString() });
+
+            }
+
+
+
+           
         }
     }
 }
