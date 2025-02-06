@@ -44,11 +44,11 @@ namespace DecisionBackend.Controllers
                 var user = await dbContext.Users.FindAsync(model.Username);
                 if (user == null)
                 {
-                    return Unauthorized(new { message = "User not found" });
+                    return Ok(new { message = "User not found" });
                 }
                 if (!BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
                 {
-                    return Unauthorized(new { message = "Password is incorrect" });
+                    return Ok(new { message = "Password is incorrect" });
 
                 }   
                 var token = jwtService.GenerateJwtToken(model.Username);
